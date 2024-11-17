@@ -1,7 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/parse-pdf/route": "app/api/parse-pdf/route.js",
+  "/page": "app/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/api/infer/route": "app/api/infer/route.js",
-  "/page": "app/page.js"
+  "/api/infer/route": "app/api/infer/route.js"
 }

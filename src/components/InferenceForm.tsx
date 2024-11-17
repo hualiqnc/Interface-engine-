@@ -82,20 +82,28 @@ export default function InferenceForm() {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (file.type === 'text/plain') {
-            const reader = new FileReader()
-            reader.onload = (e) => {
-                try {
-                    const content = e.target?.result as string
-                    setInput(content)
-                } catch (err) {
-                    setError('Invalid file format')
-                }
-            }
-            reader.readAsText(file)
-        } else {
-            setError('Unsupported file type. Please upload a .txt file only.')
+        if (!file.name.toLowerCase().endsWith('.txt')) {
+            setError('Please upload a .txt file only.')
+            return
         }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string
+                if (content) {
+                    setInput(content.trim())
+                } else {
+                    setError('Failed to read file content')
+                }
+            } catch (err) {
+                setError('Invalid file format')
+            }
+        }
+        reader.onerror = () => {
+            setError('Failed to read file')
+        }
+        reader.readAsText(file)
     }
 
     return (
@@ -296,8 +304,8 @@ export default function InferenceForm() {
                             ) : (
                                 <div className="space-y-4">
                                     {history.slice().reverse().map((item, index) => (
-                                        <Card 
-                                            key={`${item.input}-${item.method}-${index}`} 
+                                        <Card
+                                            key={`${item.input}-${item.method}-${index}`}
                                             className="bg-card dark:bg-slate-800 dark:border-slate-700"
                                         >
                                             <CardHeader>
