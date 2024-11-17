@@ -1,30 +1,45 @@
-import { NextResponse } from 'next/server'
-import * as pdfjsLib from 'pdfjs-dist'
+import { NextResponse } from 'next/server';
+import * as pdfjsLib from 'pdfjs-dist';
 
+// Hàm xử lý POST request
 export async function POST(req: Request) {
     try {
-        const formData = await req.formData()
-        const file = formData.get('file') as File
+        // Lấy dữ liệu từ request
+        const formData = await req.formData();
+        const file = formData.get('file') as File;
 
+        // Kiểm tra nếu không có file được gửi
         if (!file) {
-            return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+            return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const arrayBuffer = await file.arrayBuffer()
-        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise
-        let content = ''
+        // Đọc file PDF từ arrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
 
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i)
-            const textContent = await page.getTextContent()
-            content += textContent.items.map((item: any) => item.str).join(' ')
+        // Trích xuất nội dung từ từng trang
+        let content = '';
+        const numPages = pdf.numPages;
+
+        for (let i = 1; i <= numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            content += textContent.items
+                .map((item) => {
+                    if ('str' in item) {
+                        return item.str; // Chỉ lấy thuộc tính 'str' nếu tồn tại
+                    }
+                    return ''; // Nếu không phải TextItem, trả về chuỗi rỗng
+                })
+                .join(' ') + '\n';
         }
 
-        return NextResponse.json({ content })
+        // Trả về nội dung PDF
+        return NextResponse.json({ content }, { status: 200 });
     } catch (error) {
-        return NextResponse.json(
-            { error: 'Failed to parse PDF' },
-            { status: 500 }
-        )
+        console.error('Error processing PDF:', error);
+
+        // Xử lý lỗi và trả về response
+        return NextResponse.json({ error: 'Failed to process PDF' }, { status: 500 });
     }
 }
